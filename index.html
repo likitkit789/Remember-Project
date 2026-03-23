@@ -13,10 +13,7 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">📊 บันทึกการลงทุน</h1>
-            <div id="status" class="text-xs text-slate-400">เชื่อมต่อระบบคลาวด์แล้ว</div>
-        </div>
+        <h1 class="text-3xl font-bold text-slate-800 mb-8">📊 บันทึกการลงทุน</h1>
         
         <!-- Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
@@ -30,24 +27,16 @@
             </div>
         </div>
 
-        <!-- Input Form -->
+        <!-- Form -->
         <div class="bg-white p-6 rounded-2xl shadow-md mb-8" id="inputForm">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">วันที่</label>
-                    <input type="date" id="inputDate" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">เงินทุน</label>
-                    <input type="number" id="inputCap" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="0">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-600 mb-1">กำไร/ขาดทุน</label>
-                    <input type="number" id="inputProfit" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="ติดลบใส่ -">
-                </div>
-                <div class="flex items-end">
-                    <button id="saveBtn" onclick="addData()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-200">บันทึกลงระบบ</button>
-                </div>
+                <div><label class="block text-sm text-gray-600 mb-1">วันที่</label>
+                <input type="date" id="inputDate" class="w-full p-2 border rounded-lg outline-none"></div>
+                <div><label class="block text-sm text-gray-600 mb-1">เงินทุน</label>
+                <input type="number" id="inputCap" class="w-full p-2 border rounded-lg outline-none" placeholder="0"></div>
+                <div><label class="block text-sm text-gray-600 mb-1">กำไร/ขาดทุน</label>
+                <input type="number" id="inputProfit" class="w-full p-2 border rounded-lg outline-none" placeholder="ติดลบใส่ -"></div>
+                <div class="flex items-end"><button id="saveBtn" onclick="addData()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">บันทึก</button></div>
             </div>
         </div>
 
@@ -59,30 +48,30 @@
                         <th class="p-4">วันที่</th>
                         <th class="p-4 text-right">เงินทุน</th>
                         <th class="p-4 text-right">กำไร/ขาดทุน</th>
-                        <th class="p-4 text-right">ยอดคงเหลือ</th>
+                        <th class="p-4 text-right">คงเหลือ</th>
                         <th class="p-4 text-center">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100">
-                    <tr><td colspan="5" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูลล่าสุด...</td></tr>
+                    <tr><td colspan="5" class="p-10 text-center text-slate-400">กำลังโหลด...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // *** ใส่ URL ของ Google Apps Script ตรงนี้ ***
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwCqqDxBqNvNvAEKDfB8MZ2GdRysvQqmRMIFSboJAg4OyzdEKsY03vA7tuwYuVocxUu9w/exec"; 
+        // *** สำคัญ: เอา URL ใหม่จากขั้นตอนที่ 2 มาใส่ตรงนี้ ***
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbza_MSHXfz56zkAjmY04tCWMyUd_KvwbC4Qj-l05JMLS7VHJ48ZRhRNhN-OlnjZy9oGug/exec"; 
 
         document.getElementById('inputDate').valueAsDate = new Date();
 
         async function loadData() {
             try {
-                const response = await fetch(SCRIPT_URL);
-                const data = await response.json();
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
                 renderTable(data);
-            } catch (error) {
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
+            } catch (e) {
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">โหลดไม่สำเร็จ ตรวจสอบการ Deploy</td></tr>`;
             }
         }
 
@@ -93,74 +82,56 @@
             if (!date || cap === "" || profit === "") return alert("กรุณากรอกข้อมูลให้ครบ");
 
             const btn = document.getElementById('saveBtn');
-            const form = document.getElementById('inputForm');
             btn.innerText = "กำลังบันทึก...";
-            form.classList.add('loading');
+            document.getElementById('inputForm').classList.add('loading');
 
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "add", date, cap, profit })
-            });
-
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "add", date, cap, profit }) });
+            
             document.getElementById('inputProfit').value = '';
-            btn.innerText = "บันทึกลงระบบ";
-            form.classList.remove('loading');
+            document.getElementById('inputForm').classList.remove('loading');
+            btn.innerText = "บันทึก";
             loadData();
         }
 
-        async function deleteItem(rowIndex) {
-            if(!confirm("ยืนยันที่จะลบรายการนี้?")) return;
-            
-            const table = document.getElementById('tableBody');
-            table.classList.add('loading');
-
-            await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "delete", index: rowIndex })
-            });
-
-            table.classList.remove('loading');
+        async function deleteItem(idx) {
+            if(!confirm("ลบรายการนี้?")) return;
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "delete", index: idx }) });
             loadData();
         }
 
         function renderTable(data) {
-            const tableBody = document.getElementById('tableBody');
-            tableBody.innerHTML = '';
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
             let totalProfit = 0;
-            let lastCap = 0;
+            let latestCap = 0;
 
-            // พลิกกลับเพื่อให้แถวใหม่สุดอยู่บน (ใช้ index จริงจากล่างขึ้นบนเพื่อให้ลบได้ถูกต้อง)
-            const sortedData = data.map((item, index) => ({...item, originalIndex: index + 2})).reverse();
+            // สร้างสำเนาข้อมูลพร้อมจำตำแหน่งแถว (index+2 เพราะ Sheets เริ่มแถว 1 และมีหัวข้อ)
+            const rows = data.map((item, i) => ({ val: item, rowIdx: i + 2 })).reverse();
 
-            sortedData.forEach((item, i) => {
-                const [dateStr, cap, profit] = item instanceof Array ? item : [item[0], item[1], item[2]];
-                const capVal = parseFloat(cap);
-                const profitVal = parseFloat(profit);
+            rows.forEach((item, i) => {
+                const [d, cap, prof] = item.val;
+                const cVal = parseFloat(cap);
+                const pVal = parseFloat(prof);
                 
-                // จัดรูปแบบวันที่ใหม่ ตัดเวลา T17:00... ออก
-                const cleanDate = new Date(dateStr).toLocaleDateString('th-TH', {
-                    year: 'numeric', month: 'short', day: 'numeric'
-                });
+                // แปลงวันที่ให้สวยงาม (ตัดเวลาออก)
+                const dateObj = new Date(d);
+                const dStr = isNaN(dateObj) ? d : dateObj.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
 
-                totalProfit += profitVal;
-                if(i === 0) lastCap = capVal;
+                totalProfit += pVal;
+                if(i === 0) latestCap = cVal;
 
                 const tr = document.createElement('tr');
-                const pClass = profitVal >= 0 ? 'text-emerald-600' : 'text-red-600';
-
                 tr.innerHTML = `
-                    <td class="p-4 text-slate-600 font-medium">${cleanDate}</td>
-                    <td class="p-4 text-right font-medium">฿${capVal.toLocaleString()}</td>
-                    <td class="p-4 text-right font-bold ${pClass}">${profitVal > 0 ? '+' : ''}${profitVal.toLocaleString()}</td>
-                    <td class="p-4 text-right font-bold text-slate-800">฿${(capVal + profitVal).toLocaleString()}</td>
-                    <td class="p-4 text-center">
-                        <button onclick="deleteItem(${item.originalIndex})" class="text-red-400 hover:text-red-600 transition text-sm font-semibold">ลบ</button>
-                    </td>
+                    <td class="p-4 text-sm text-slate-600">${dStr}</td>
+                    <td class="p-4 text-right font-medium">฿${cVal.toLocaleString()}</td>
+                    <td class="p-4 text-right font-bold ${pVal >= 0 ? 'text-green-600' : 'text-red-600'}">${pVal > 0 ? '+' : ''}${pVal.toLocaleString()}</td>
+                    <td class="p-4 text-right font-bold">฿${(cVal + pVal).toLocaleString()}</td>
+                    <td class="p-4 text-center"><button onclick="deleteItem(${item.rowIdx})" class="text-red-400 text-sm">ลบ</button></td>
                 `;
-                tableBody.appendChild(tr);
+                tbody.appendChild(tr);
             });
 
-            document.getElementById('displayCap').innerText = `฿${lastCap.toLocaleString()}`;
+            document.getElementById('displayCap').innerText = `฿${latestCap.toLocaleString()}`;
             document.getElementById('displayProfit').innerText = `฿${totalProfit.toLocaleString()}`;
         }
 
