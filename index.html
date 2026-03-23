@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investment Sync Dashboard</title>
+    <title>บันทึกการลงทุน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com" rel="stylesheet">
     <style>
@@ -14,11 +14,11 @@
 <body class="p-4 md:p-8">
     <div class="max-w-5xl mx-auto">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">🌐 My Cloud Invest</h1>
-            <div id="status" class="text-xs text-slate-400">เชื่อมต่อแล้ว</div>
+            <h1 class="text-3xl font-bold text-slate-800">📊 บันทึกการลงทุน</h1>
+            <div id="status" class="text-xs text-slate-400">เชื่อมต่อระบบคลาวด์แล้ว</div>
         </div>
         
-        <!-- Summary Dashboard -->
+        <!-- Dashboard -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
             <div class="bg-white p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
                 <p class="text-gray-500 text-sm">ทุนล่าสุด</p>
@@ -35,18 +35,18 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">วันที่</label>
-                    <input type="date" id="inputDate" class="w-full p-2 border rounded-lg outline-none">
+                    <input type="date" id="inputDate" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">เงินทุน</label>
-                    <input type="number" id="inputCap" class="w-full p-2 border rounded-lg outline-none" placeholder="0">
+                    <input type="number" id="inputCap" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="0">
                 </div>
                 <div>
                     <label class="block text-sm text-gray-600 mb-1">กำไร/ขาดทุน</label>
-                    <input type="number" id="inputProfit" class="w-full p-2 border rounded-lg outline-none" placeholder="ติดลบใส่ -">
+                    <input type="number" id="inputProfit" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" placeholder="ติดลบใส่ -">
                 </div>
                 <div class="flex items-end">
-                    <button id="saveBtn" onclick="addData()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition">บันทึกส่ง Google</button>
+                    <button id="saveBtn" onclick="addData()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-200">บันทึกลงระบบ</button>
                 </div>
             </div>
         </div>
@@ -60,90 +60,102 @@
                         <th class="p-4 text-right">เงินทุน</th>
                         <th class="p-4 text-right">กำไร/ขาดทุน</th>
                         <th class="p-4 text-right">ยอดคงเหลือ</th>
+                        <th class="p-4 text-center">จัดการ</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-slate-100">
-                    <tr><td colspan="4" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูลจาก Google Sheets...</td></tr>
+                    <tr><td colspan="5" class="p-10 text-center text-slate-400">กำลังโหลดข้อมูลล่าสุด...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // *** สำคัญ: เอา URL ที่ได้จาก Google Apps Script มาวางตรงนี้ ***
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbycfWnSzeFb2wJeuuGicErB3vkeCD4uG-jkQwzSBmPbIoVGPqa4kjsPd-22f15Jm8eg/exec"; 
+        // *** ใส่ URL ของ Google Apps Script ตรงนี้ ***
+        const SCRIPT_URL = "ใส่_WEB_APP_URL_ของคุณที่นี่"; 
 
         document.getElementById('inputDate').valueAsDate = new Date();
 
-        // 1. ดึงข้อมูลจาก Google Sheets มาแสดง
         async function loadData() {
             try {
                 const response = await fetch(SCRIPT_URL);
                 const data = await response.json();
                 renderTable(data);
             } catch (error) {
-                console.error("Error:", error);
-                document.getElementById('tableBody').innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-500">โหลดข้อมูลไม่สำเร็จ ตรวจสอบ URL SCRIPT</td></tr>`;
+                document.getElementById('tableBody').innerHTML = `<tr><td colspan="5" class="p-10 text-center text-red-500">โหลดข้อมูลไม่สำเร็จ</td></tr>`;
             }
         }
 
-        // 2. บันทึกข้อมูลใหม่ลง Google Sheets
         async function addData() {
             const date = document.getElementById('inputDate').value;
             const cap = document.getElementById('inputCap').value;
             const profit = document.getElementById('inputProfit').value;
-
             if (!date || cap === "" || profit === "") return alert("กรุณากรอกข้อมูลให้ครบ");
 
             const btn = document.getElementById('saveBtn');
             const form = document.getElementById('inputForm');
-            
             btn.innerText = "กำลังบันทึก...";
             form.classList.add('loading');
 
-            try {
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ date, cap, profit })
-                });
-                
-                document.getElementById('inputProfit').value = '';
-                await loadData(); // โหลดข้อมูลใหม่มาโชว์
-            } catch (e) {
-                alert("บันทึกไม่สำเร็จ");
-            } finally {
-                btn.innerText = "บันทึกส่ง Google";
-                form.classList.remove('loading');
-            }
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "add", date, cap, profit })
+            });
+
+            document.getElementById('inputProfit').value = '';
+            btn.innerText = "บันทึกลงระบบ";
+            form.classList.remove('loading');
+            loadData();
         }
 
-        // 3. แสดงผลตารางและสรุปผล
+        async function deleteItem(rowIndex) {
+            if(!confirm("ยืนยันที่จะลบรายการนี้?")) return;
+            
+            const table = document.getElementById('tableBody');
+            table.classList.add('loading');
+
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "delete", index: rowIndex })
+            });
+
+            table.classList.remove('loading');
+            loadData();
+        }
+
         function renderTable(data) {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
             let totalProfit = 0;
             let lastCap = 0;
 
-            // เรียงวันที่ล่าสุดขึ้นก่อน
-            data.sort((a, b) => new Date(b[0]) - new Date(a[0]));
+            // พลิกกลับเพื่อให้แถวใหม่สุดอยู่บน (ใช้ index จริงจากล่างขึ้นบนเพื่อให้ลบได้ถูกต้อง)
+            const sortedData = data.map((item, index) => ({...item, originalIndex: index + 2})).reverse();
 
-            data.forEach((rowArr, index) => {
-                const [date, cap, profit] = rowArr;
+            sortedData.forEach((item, i) => {
+                const [dateStr, cap, profit] = item instanceof Array ? item : [item[0], item[1], item[2]];
                 const capVal = parseFloat(cap);
                 const profitVal = parseFloat(profit);
-                const balance = capVal + profitVal;
                 
+                // จัดรูปแบบวันที่ใหม่ ตัดเวลา T17:00... ออก
+                const cleanDate = new Date(dateStr).toLocaleDateString('th-TH', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                });
+
                 totalProfit += profitVal;
-                if(index === 0) lastCap = capVal;
+                if(i === 0) lastCap = capVal;
 
                 const tr = document.createElement('tr');
                 const pClass = profitVal >= 0 ? 'text-emerald-600' : 'text-red-600';
 
                 tr.innerHTML = `
-                    <td class="p-4 text-slate-600">${date}</td>
+                    <td class="p-4 text-slate-600 font-medium">${cleanDate}</td>
                     <td class="p-4 text-right font-medium">฿${capVal.toLocaleString()}</td>
                     <td class="p-4 text-right font-bold ${pClass}">${profitVal > 0 ? '+' : ''}${profitVal.toLocaleString()}</td>
-                    <td class="p-4 text-right font-bold text-slate-800">฿${balance.toLocaleString()}</td>
+                    <td class="p-4 text-right font-bold text-slate-800">฿${(capVal + profitVal).toLocaleString()}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteItem(${item.originalIndex})" class="text-red-400 hover:text-red-600 transition text-sm font-semibold">ลบ</button>
+                    </td>
                 `;
                 tableBody.appendChild(tr);
             });
@@ -152,7 +164,6 @@
             document.getElementById('displayProfit').innerText = `฿${totalProfit.toLocaleString()}`;
         }
 
-        // โหลดข้อมูลทันทีที่เปิดเว็บ
         loadData();
     </script>
 </body>
